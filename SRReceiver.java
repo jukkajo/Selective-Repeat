@@ -82,12 +82,12 @@ public class SRReceiver {
                     // send ACK back to sender
                     Tools.sendACK(ackNum, channelAddress, channelPort, socket);
 
-                    // if the packet is not previously received, it is buffered
+                    // If the packet is not previously received, add to buffer
                     if (!map.containsKey(ackNum)) {
                         map.put(ackNum, packet);
                     }
 
-                    // if ackNum == base, move forward the window
+                    // If true, move the windoq forward
                     if (ackNum == base) {
                         while (map.containsKey(ackNum)) {
                             foStream.write(map.get(ackNum).getData());
@@ -98,7 +98,7 @@ public class SRReceiver {
                     }
 
                 } else if (withinPrevWindow(ackNum)) {
-                    // if the packet falls in receiver's previous window, send back ACK
+                    // iF the packet belongs in receiver's previous window -> send ACK
                     Tools.sendACK(ackNum, channelAddress, channelPort, socket);
                 }
             }
