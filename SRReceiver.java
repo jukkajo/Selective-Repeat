@@ -19,7 +19,7 @@ public class SRReceiver {
     private Map<Integer, Packet> map;
 
     private DatagramSocket socket;
-    private FileOutputStream fout;
+    private FileOutputStream foStream;
 
     private InetAddress channelAddress;
     private int channelPort;
@@ -27,13 +27,13 @@ public class SRReceiver {
 
     SRReceiver(DatagramSocket socket, String file) throws Exception {
         this.socket = socket;
-        fout = new FileOutputStream(file);
+        foStream = new FileOutputStream(file);
         base = 0;
         getChannelInfo = false;
         map = new HashMap<>();
     }
 
-    // check if ackNum falls in the receiver's window
+    // Here we check if ackNum belong in the receiver's window
     private boolean withinWindow(int ackNum) {
         int distance = ackNum - base;
         if (ackNum < base) {
@@ -42,7 +42,7 @@ public class SRReceiver {
         return distance < winSize;
     }
 
-    // check if ackNum falls in receiver's previous window
+    // Check if ackNum is in receiver's previous window
     private boolean withinPrevWindow(int ackNum) {
         int distance = base - ackNum;
         if (base < ackNum) {
@@ -58,11 +58,11 @@ public class SRReceiver {
 
         System.out.println("Receiver active (Listening):");
         while(true) {
-            // receive packet
+            
             socket.receive(receiveDatagram);
             Packet packet = Packet.getPacket(receiveDatagram.getData());
 
-            // get channel info
+            // Ask channel info
             if (!getChannelInfo) {
                 channelAddress = receiveDatagram.getAddress();
                 channelPort = receiveDatagram.getPort();
@@ -70,7 +70,7 @@ public class SRReceiver {
             }
 
             if (packet.getType() == 2) {
-                // end receiver session when receiving EOT
+                // Brea kwhen receiving EOT
                 Tools.endReceiverSession(packet, channelAddress, channelPort, socket);
                 break;
 
@@ -90,7 +90,7 @@ public class SRReceiver {
                     // if ackNum == base, move forward the window
                     if (ackNum == base) {
                         while (map.containsKey(ackNum)) {
-                            fout.write(map.get(ackNum).getData());
+                            foStream.write(map.get(ackNum).getData());
                             map.remove(ackNum);
                             ackNum = (ackNum + 1) % seqNumMod;
                         }
@@ -107,7 +107,7 @@ public class SRReceiver {
 
         // close socket and file outputstream
         System.out.println("Receiving process complete :)");
-        fout.close();
+        foStream.close();
         socket.close();
     }
     
